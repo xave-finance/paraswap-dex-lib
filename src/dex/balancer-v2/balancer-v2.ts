@@ -29,6 +29,7 @@ import { StablePool } from './pools/stable/StablePool';
 import { WeightedPool } from './pools/weighted/WeightedPool';
 import { PhantomStablePool } from './pools/phantom-stable/PhantomStablePool';
 import { LinearPool } from './pools/linear/LinearPool';
+import { FXPool } from './pools/fx/FXPool';
 import VaultABI from '../../abi/balancer-v2/vault.json';
 import DirectSwapABI from '../../abi/DirectSwap.json';
 import { StatefulEventSubscriber } from '../../stateful-event-subscriber';
@@ -95,7 +96,7 @@ const fetchAllPools = `query ($count: Int) {
       poolType_in: [
         "MetaStable", "Stable", "Weighted", "LiquidityBootstrapping", "Investment", "StablePhantom", "AaveLinear",
         "ERC4626Linear", "Linear", "ComposableStable", "BeefyLinear", "GearboxLinear", "MidasLinear",
-        "ReaperLinear", "SiloLinear", "TetuLinear", "YearnLinear"
+        "ReaperLinear", "SiloLinear", "TetuLinear", "YearnLinear", "FX"
       ]
     }
   ) {
@@ -105,9 +106,17 @@ const fetchAllPools = `query ($count: Int) {
     tokens (orderBy: index) {
       address
       decimals
+      token {
+        latestFXPrice
+      }
     }
     mainIndex
     wrappedIndex
+    alpha
+    beta
+    delta
+    epsilon
+    lambda
   }
 }`;
 // skipping low liquidity composableStablePool (0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee0000000000000000000003c6) with oracle issues. Experimental.
@@ -140,7 +149,12 @@ export class BalancerV2EventPool extends StatefulEventSubscriber<PoolStateMap> {
   } = {};
 
   pools: {
-    [type: string]: WeightedPool | StablePool | LinearPool | PhantomStablePool;
+    [type: string]:
+      | WeightedPool
+      | StablePool
+      | LinearPool
+      | PhantomStablePool
+      | FXPool;
   };
 
   public allPools: SubgraphPoolBase[] = [];
@@ -151,6 +165,7 @@ export class BalancerV2EventPool extends StatefulEventSubscriber<PoolStateMap> {
     BalancerPoolTypes.Weighted,
     BalancerPoolTypes.LiquidityBootstrapping,
     BalancerPoolTypes.Investment,
+    BalancerPoolTypes.FX,
 
     // Need to check if we can support these pools with event base
     // BalancerPoolTypes.ComposableStable,
@@ -203,6 +218,7 @@ export class BalancerV2EventPool extends StatefulEventSubscriber<PoolStateMap> {
       true,
     );
     const linearPool = new LinearPool(this.vaultAddress, this.vaultInterface);
+    const fxPool = new FXPool(this.vaultAddress, this.vaultInterface);
 
     this.pools = {};
     this.pools[BalancerPoolTypes.Weighted] = weightedPool;
@@ -212,6 +228,7 @@ export class BalancerV2EventPool extends StatefulEventSubscriber<PoolStateMap> {
     this.pools[BalancerPoolTypes.Investment] = weightedPool;
     this.pools[BalancerPoolTypes.StablePhantom] = stablePhantomPool;
     this.pools[BalancerPoolTypes.ComposableStable] = composableStable;
+    this.pools[BalancerPoolTypes.FX] = fxPool;
     // All these Linear pool have same maths and ABI as AaveLinear but have different factories
     this.pools[BalancerPoolTypes.AaveLinear] = linearPool;
     this.pools[BalancerPoolTypes.ERC4626Linear] = linearPool;

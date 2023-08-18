@@ -3,6 +3,7 @@ import { Interface, Result } from '@ethersproject/abi';
 import { getBigIntPow } from '../../utils';
 import { BI_POWS } from '../../bigint-constants';
 import { SwapSide } from '../../constants';
+import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 
 import {
   BalancerPoolTypes,
@@ -193,4 +194,19 @@ function findRequiredMainTokenInPool(
   }
 
   return mainToken;
+}
+
+/**
+ * Parses a fixed-point decimal string into a BigNumber. If we do not have enough decimals to express the number, we truncate it.
+ * @param value
+ * @param decimals
+ * @returns BigNumber
+ */
+export function safeParseFixed(value: string, decimals = 0): BigNumber {
+  const [integer, fraction] = value.split('.');
+  if (!fraction) {
+    return parseFixed(value, decimals);
+  }
+  const safeValue = integer + '.' + fraction.slice(0, decimals);
+  return parseFixed(safeValue, decimals);
 }

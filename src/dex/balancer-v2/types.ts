@@ -20,6 +20,7 @@ export enum BalancerPoolTypes {
   SiloLinear = 'SiloLinear',
   TetuLinear = 'TetuLinear',
   YearnLinear = 'YearnLinear',
+  FX = 'FX',
 }
 
 export type TokenState = {
@@ -48,6 +49,9 @@ export type PoolState = {
 export type SubgraphToken = {
   address: string;
   decimals: number;
+  token?: {
+    latestFXPrice: string;
+  };
 };
 
 export interface SubgraphMainToken extends SubgraphToken {
@@ -77,6 +81,12 @@ export interface SubgraphPoolBase {
   wrappedIndex: number;
 
   mainTokens: SubgraphMainToken[];
+
+  alpha: string;
+  beta: string;
+  delta: string;
+  epsilon: string;
+  lambda: string;
 }
 
 export type BalancerSwapV2 = {
