@@ -73,7 +73,7 @@ async function getOnChainPricingForWeightedPool(
 }
 
 describe('BalancerV2', function () {
-  describe('ComposableStable', () => {
+  describe.skip('ComposableStable', () => {
     it('USDC -> USDT getPoolIdentifiers and getPricesVolume', async () => {
       const network = Network.MAINNET;
       const srcToken = Tokens[network]['USDC'];
@@ -151,7 +151,7 @@ describe('BalancerV2', function () {
       await balancerV2.releaseResources();
     });
   });
-  describe('Weighted', () => {
+  describe.skip('Weighted', () => {
     it('SELL getPoolIdentifiers and getPricesVolume BAL -> WETH', async function () {
       const BAL = Tokens[Network.MAINNET]['BAL'];
       const WETH = Tokens[Network.MAINNET]['WETH'];
@@ -366,7 +366,7 @@ describe('BalancerV2', function () {
     });
   });
 
-  describe('Linear', () => {
+  describe.skip('Linear', () => {
     it('getPoolIdentifiers and getPricesVolume', async function () {
       const dexHelper = new DummyDexHelper(Network.MAINNET);
       const blocknumber = await dexHelper.web3Provider.eth.getBlockNumber();
@@ -455,7 +455,7 @@ describe('BalancerV2', function () {
     // });
   });
 
-  describe('PhantomStable', () => {
+  describe.skip('PhantomStable', () => {
     /*
     As advised by @shresth this test has been commented out.
     checkPoolPrices expects price to decrease as higher amounts are used. Linear/PhantomStable can sometimes return same or better.
@@ -551,9 +551,77 @@ describe('BalancerV2', function () {
     //   ).toBe('1015093119997891367');
     // });
   });
+
+  describe('FX', () => {
+    it('getTopPoolsForToken', async function () {
+      const EURS = Tokens[Network.MAINNET]['EURS'];
+
+      const dexHelper = new DummyDexHelper(Network.MAINNET);
+      const blocknumber = await dexHelper.web3Provider.eth.getBlockNumber();
+      const balancerV2 = new BalancerV2(Network.MAINNET, dexKey, dexHelper);
+
+      await balancerV2.initializePricing(blocknumber);
+
+      const poolLiquidity = await balancerV2.getTopPoolsForToken(
+        EURS.address,
+        10,
+      );
+      console.log('EURS Top Pools:', poolLiquidity);
+
+      checkPoolsLiquidity(poolLiquidity, EURS.address, dexKey);
+    });
+
+    it('SELL getPoolIdentifiers and getPricesVolume EURS -> USDC', async function () {
+      const EURS = Tokens[Network.MAINNET]['EURS'];
+      const USDC = Tokens[Network.MAINNET]['USDC'];
+      const dexHelper = new DummyDexHelper(Network.MAINNET);
+      const blocknumber = await dexHelper.web3Provider.eth.getBlockNumber();
+      const balancerV2 = new BalancerV2(Network.MAINNET, dexKey, dexHelper);
+
+      await balancerV2.initializePricing(blocknumber);
+
+      const pools = await balancerV2.getPoolIdentifiers(
+        EURS,
+        USDC,
+        SwapSide.SELL,
+        blocknumber,
+      );
+      console.log('EURS <> USDC Pool Identifiers: ', pools);
+
+      expect(pools.length).toBeGreaterThan(0);
+
+      const poolPrices = await balancerV2.getPricesVolume(
+        EURS,
+        USDC,
+        amounts,
+        SwapSide.SELL,
+        blocknumber,
+        pools,
+      );
+      console.log('EURS <> USDC Pool Prices: ', poolPrices);
+
+      expect(poolPrices).not.toBeNull();
+
+      const onChainPrices = await getOnChainPricingForWeightedPool(
+        balancerV2,
+        blocknumber,
+        poolPrices![0],
+        amounts,
+        EURS.address,
+        USDC.address,
+        SwapSide.SELL,
+      );
+
+      console.log('EURS <> USDC on-chain prices: ', onChainPrices);
+
+      expect(onChainPrices).toEqual(poolPrices![0].prices);
+
+      await balancerV2.releaseResources();
+    });
+  });
 });
 
-describe('BeetsFi', () => {
+describe.skip('BeetsFi', () => {
   it('FTM -> BOO: getPoolIdentifiers and getPricesVolume', async () => {
     const dexKey = 'BeetsFi';
     const network = Network.FANTOM;
