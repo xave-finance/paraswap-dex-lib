@@ -316,6 +316,10 @@ export const Tokens: {
     },
   },
   [Network.POLYGON]: {
+    XSGD: {
+      address: '0xDC3326e71D45186F113a2F448984CA0e8D201995',
+      decimals: 6,
+    },
     DAI: {
       address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
       decimals: 18,

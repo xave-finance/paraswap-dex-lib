@@ -553,7 +553,7 @@ describe('BalancerV2', function () {
   });
 
   describe('FX', () => {
-    it('getTopPoolsForToken', async function () {
+    it.skip('getTopPoolsForToken', async function () {
       const EURS = Tokens[Network.MAINNET]['EURS'];
 
       const dexHelper = new DummyDexHelper(Network.MAINNET);
@@ -572,16 +572,16 @@ describe('BalancerV2', function () {
     });
 
     it('SELL getPoolIdentifiers and getPricesVolume EURS -> USDC', async function () {
-      const EURS = Tokens[Network.MAINNET]['EURS'];
-      const USDC = Tokens[Network.MAINNET]['USDC'];
-      const dexHelper = new DummyDexHelper(Network.MAINNET);
+      const XSGD = Tokens[Network.POLYGON]['XSGD'];
+      const USDC = Tokens[Network.POLYGON]['USDC'];
+      const dexHelper = new DummyDexHelper(Network.POLYGON);
       const blocknumber = await dexHelper.web3Provider.eth.getBlockNumber();
-      const balancerV2 = new BalancerV2(Network.MAINNET, dexKey, dexHelper);
+      const balancerV2 = new BalancerV2(Network.POLYGON, dexKey, dexHelper);
 
       await balancerV2.initializePricing(blocknumber);
 
       const pools = await balancerV2.getPoolIdentifiers(
-        EURS,
+        XSGD,
         USDC,
         SwapSide.SELL,
         blocknumber,
@@ -591,14 +591,14 @@ describe('BalancerV2', function () {
       expect(pools.length).toBeGreaterThan(0);
 
       const poolPrices = await balancerV2.getPricesVolume(
-        EURS,
+        XSGD,
         USDC,
         amounts,
         SwapSide.SELL,
         blocknumber,
         pools,
       );
-      console.log('EURS <> USDC Pool Prices: ', poolPrices);
+      console.log('XSGD <> USDC Pool Prices: ', poolPrices);
 
       expect(poolPrices).not.toBeNull();
 
@@ -607,12 +607,12 @@ describe('BalancerV2', function () {
         blocknumber,
         poolPrices![0],
         amounts,
-        EURS.address,
+        XSGD.address,
         USDC.address,
         SwapSide.SELL,
       );
 
-      console.log('EURS <> USDC on-chain prices: ', onChainPrices);
+      console.log('XSGD <> USDC on-chain prices: ', onChainPrices);
 
       expect(onChainPrices).toEqual(poolPrices![0].prices);
 

@@ -51,6 +51,7 @@ export type SubgraphToken = {
   decimals: number;
   token?: {
     latestFXPrice: string;
+    fxOracleDecimals: number;
   };
 };
 
