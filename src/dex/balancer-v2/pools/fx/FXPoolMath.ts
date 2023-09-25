@@ -144,7 +144,7 @@ export function viewNumeraireAmount(
 export function exactTokenInForTokenOut(
   amount: OldBigNumber,
   poolPairData: FXPoolPairData,
-): OldBigNumber {
+): BigInt {
   const parsedFXPoolData = _getParsedFXPoolData(
     safeParseFixed(amount.toString(), 36),
     poolPairData,
@@ -154,14 +154,14 @@ export function exactTokenInForTokenOut(
   const targetAmountInNumeraire_36 = parsedFXPoolData.givenAmountInNumeraire_36;
 
   if (poolPairData.tokenIn === poolPairData.tokenOut) {
-    return bnum(
+    return BigInt(
       viewRawAmount(
         targetAmountInNumeraire_36,
         poolPairData.decimalsIn,
         poolPairData.tokenInLatestFXPrice,
         poolPairData.tokenInFXOracleDecimals,
       ).toString(),
-    ).div(bnum(10).pow(poolPairData.decimalsIn)); // must be the token out
+    ); // must be the token out
   }
 
   const _oGLiq_36 = parsedFXPoolData._oGLiq_36;
@@ -185,14 +185,14 @@ export function exactTokenInForTokenOut(
     const epsilon_36 = parsedFXPoolData.epsilon_36;
     const _amtWithFee_36 = _amt_36[0].mul(ONE_36.sub(epsilon_36)).div(ONE_36);
 
-    return bnum(
+    return BigInt(
       viewRawAmount(
         _amtWithFee_36.abs(),
         poolPairData.decimalsOut,
         poolPairData.tokenOutLatestFXPrice,
         poolPairData.tokenOutFXOracleDecimals,
       ).toString(),
-    ).div(bnum(10).pow(poolPairData.decimalsOut));
+    );
   }
 }
 

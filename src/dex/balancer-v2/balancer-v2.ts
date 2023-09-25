@@ -413,14 +413,12 @@ export class BalancerV2EventPool extends StatefulEventSubscriber<PoolStateMap> {
       from.address,
       to.address,
     );
-    console.log('poolPairData:', poolPairData);
 
     const swapMaxAmount = pool.getSwapMaxAmount(
       // Don't like this but don't have time to refactor it properly
       poolPairData as any,
       side,
     );
-    console.log('swapMaxAmount:', swapMaxAmount);
 
     const checkedAmounts: bigint[] = new Array(amountWithoutZero.length).fill(
       0n,
@@ -738,7 +736,6 @@ export class BalancerV2
       }
 
       const allPools = this.getPoolsWithTokenPair(_from, _to);
-      console.log('allPools:', allPools);
       const allowedPools = limitPools
         ? allPools.filter(({ address }) =>
             limitPools.includes(`${this.dexKey}_${address.toLowerCase()}`),
@@ -766,7 +763,6 @@ export class BalancerV2
         this.poolAddressMap,
         side,
       );
-      console.log('poolsFlattened:', poolsFlattened);
 
       // Missing pools are pools that don't already exist in event or non-event
       const missingPools = poolsFlattened.filter(
@@ -801,7 +797,6 @@ export class BalancerV2
             this.poolAddressMap,
             side,
           );
-          console.log('path:', path);
 
           let pathAmounts = amounts;
           let resOut: { unit: bigint; prices: bigint[] } | null = null;
@@ -810,7 +805,6 @@ export class BalancerV2
             const poolAddress = path[i].pool.address.toLowerCase();
             const poolState = (eventPoolStates[poolAddress] ||
               nonEventPoolStates[poolAddress]) as PoolState | undefined;
-            console.log('poolState:', poolState);
             if (!poolState) {
               this.logger.error(`Unable to find the poolState ${poolAddress}`);
               return null;
@@ -830,7 +824,6 @@ export class BalancerV2
               unitVolume,
               side,
             );
-            console.log('res:', res);
 
             if (!res) {
               return null;

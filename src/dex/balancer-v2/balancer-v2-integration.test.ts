@@ -571,7 +571,9 @@ describe('BalancerV2', function () {
       checkPoolsLiquidity(poolLiquidity, EURS.address, dexKey);
     });
 
-    it('SELL getPoolIdentifiers and getPricesVolume EURS -> USDC', async function () {
+    it('SELL getPoolIdentifiers and getPricesVolume XSGD -> USDC', async function () {
+      const _amounts = [0n, BI_POWS[6], 2000000n];
+
       const XSGD = Tokens[Network.POLYGON]['XSGD'];
       const USDC = Tokens[Network.POLYGON]['USDC'];
       const dexHelper = new DummyDexHelper(Network.POLYGON);
@@ -593,7 +595,7 @@ describe('BalancerV2', function () {
       const poolPrices = await balancerV2.getPricesVolume(
         XSGD,
         USDC,
-        amounts,
+        _amounts,
         SwapSide.SELL,
         blocknumber,
         pools,
@@ -606,7 +608,7 @@ describe('BalancerV2', function () {
         balancerV2,
         blocknumber,
         poolPrices![0],
-        amounts,
+        _amounts,
         XSGD.address,
         USDC.address,
         SwapSide.SELL,

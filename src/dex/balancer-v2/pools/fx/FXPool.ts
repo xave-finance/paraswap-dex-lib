@@ -14,6 +14,7 @@ import {
   viewRawAmount,
 } from './FXPoolMath';
 import { safeParseFixed } from './utils/utils';
+import { BI_POWS } from '../../../../bigint-constants';
 
 /**
  * =========================
@@ -59,9 +60,12 @@ export class FXPool extends BasePool {
   onBuy(tokenAmountsOut: bigint[], poolPairData: FXPoolPairData): bigint[] {
     try {
       return tokenAmountsOut.map(amount => {
+        const amountStr = (
+          amount / BI_POWS[poolPairData.decimalsIn]
+        ).toString();
         return this._inHigherPrecision(
           tokenInForExactTokenOut,
-          amount,
+          bnum(amountStr),
           poolPairData,
         );
       });
@@ -74,9 +78,12 @@ export class FXPool extends BasePool {
   onSell(amounts: bigint[], poolPairData: FXPoolPairData): bigint[] {
     try {
       return amounts.map(amount => {
+        const amountStr = (
+          amount / BI_POWS[poolPairData.decimalsIn]
+        ).toString();
         return this._inHigherPrecision(
           exactTokenInForTokenOut,
-          amount,
+          bnum(amountStr),
           poolPairData,
         );
       });
@@ -120,18 +127,8 @@ export class FXPool extends BasePool {
     let tokenOutFXOracleDecimals = pool.tokens[indexIn].token?.fxOracleDecimals;
     if (!tokenOutFXOracleDecimals) tokenOutFXOracleDecimals = 8;
 
-    const balanceIn = BigNumber.from(
-      this._upscale(
-        balances[indexIn],
-        getTokenScalingFactor(decimals[indexIn]),
-      ),
-    );
-    const balanceOut = BigNumber.from(
-      this._upscale(
-        balances[indexOut],
-        getTokenScalingFactor(decimals[indexOut]),
-      ),
-    );
+    const balanceIn = BigNumber.from(balances[indexIn].toString());
+    const balanceOut = BigNumber.from(balances[indexOut].toString());
 
     const poolPairData: FXPoolPairData = {
       tokenIn: tokens[indexIn],
@@ -231,55 +228,40 @@ export class FXPool extends BasePool {
   _getSwapMaxAmount(poolPairData: FXPoolPairData, side: SwapSide): bigint {
     try {
       const parsedReserves = poolBalancesToNumeraire(poolPairData);
-      console.log('_oGLiq_36:', parsedReserves._oGLiq_36.toString());
 
       const alphaValue = safeParseFixed(poolPairData.alpha.toString(), 18);
-      console.log('alphaValue:', alphaValue.toString());
 
       const maxLimit = alphaValue
         .add(ONE_36)
         .mul(parsedReserves._oGLiq_36)
         .div(ONE_36)
         .div(2);
-      console.log('maxLimit:', maxLimit.toString());
-      console.log(
-        'tokenInReservesInNumeraire_36:',
-        parsedReserves.tokenInReservesInNumeraire_36.toString(),
-      );
 
       if (side === SwapSide.SELL) {
         const maxLimitAmount_36 = maxLimit.sub(
           parsedReserves.tokenInReservesInNumeraire_36.toString(),
         );
-        console.log('maxLimitAmount_36:', maxLimitAmount_36.toString());
 
-        const maxLimitBN = bnum(
+        return BigInt(
           viewRawAmount(
             maxLimitAmount_36,
             poolPairData.decimalsIn,
             poolPairData.tokenInLatestFXPrice,
             poolPairData.tokenInFXOracleDecimals,
           ).toString(),
-        ).div(bnum(10).pow(poolPairData.decimalsIn));
-        console.log('maxLimitBN:', maxLimitBN.toString());
-
-        return BigInt(maxLimitBN.toString());
+        );
       } else {
         const maxLimitAmount_36 = maxLimit.sub(
           parsedReserves.tokenOutReservesInNumeraire_36,
         );
 
         return BigInt(
-          bnum(
-            viewRawAmount(
-              maxLimitAmount_36,
-              poolPairData.decimalsOut,
-              poolPairData.tokenOutLatestFXPrice,
-              poolPairData.tokenOutFXOracleDecimals,
-            ).toString(),
-          )
-            .div(bnum(10).pow(poolPairData.decimalsOut))
-            .toString(),
+          viewRawAmount(
+            maxLimitAmount_36,
+            poolPairData.decimalsOut,
+            poolPairData.tokenOutLatestFXPrice,
+            poolPairData.tokenOutFXOracleDecimals,
+          ).toString(),
         );
       }
     } catch {
